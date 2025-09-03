@@ -14,6 +14,10 @@
     <input type="date" id="newDate">
     <button onclick="addEntry()">Lưu</button>
 
+    <h2>Tìm kiếm & Lọc</h2>
+    <input id="searchBox" placeholder="Tìm theo tiêu đề hoặc nội dung..." oninput="renderEntries()">
+    <input type="month" id="filterMonth" onchange="renderEntries()">
+
     <h2>Bài viết</h2>
     <ul id="entries"></ul>
   </div>
