@@ -1,47 +1,75 @@
-async function loadEntries() {
-  let res = await fetch("entries.json?_=" + Date.now());
-  let data = await res.json();
-  let list = document.getElementById("entries");
-  list.innerHTML = "";
-  data.forEach(entry => {
-    let li = document.createElement("li");
-    li.textContent = entry.date + ": " + entry.text;
-    list.appendChild(li);
-  });
+function getData() {
+  return JSON.parse(localStorage.getItem("diary")) || [];
 }
 
-async function addEntry() {
-  let text = document.getElementById("newEntry").value.trim();
-  if (!text) return;
-
-  let res = await fetch("entries.json");
-  let data = await res.json();
-
-  let newEntry = { date: new Date().toLocaleDateString("vi-VN"), text };
-  data.unshift(newEntry);
-
-  // chỉ lưu localStorage vì GitHub Pages không cho ghi file
+function saveData(data) {
   localStorage.setItem("diary", JSON.stringify(data));
-
-  renderFromLocal();
-  document.getElementById("newEntry").value = "";
 }
 
-function renderFromLocal() {
+function renderEntries() {
   let list = document.getElementById("entries");
   list.innerHTML = "";
-  let data = JSON.parse(localStorage.getItem("diary")) || [];
-  data.forEach(entry => {
+  let data = getData();
+
+  data.forEach((entry, index) => {
     let li = document.createElement("li");
-    li.textContent = entry.date + ": " + entry.text;
+    li.className = "entry";
+
+    li.innerHTML = `
+      <h3>${entry.title} <small>(${entry.date})</small></h3>
+      <p>${entry.text}</p>
+      <button onclick="editEntry(${index})">✏️ Sửa</button>
+      <button onclick="deleteEntry(${index})">🗑️ Xoá</button>
+    `;
+
     list.appendChild(li);
   });
 }
 
-window.onload = () => {
-  if (localStorage.getItem("diary")) {
-    renderFromLocal();
-  } else {
-    loadEntries();
-  }
-};
+function addEntry() {
+  let title = document.getElementById("newTitle").value.trim();
+  let text = document.getElementById("newEntry").value.trim();
+  let dateInput = document.getElementById("newDate").value;
+
+  if (!title || !text) return alert("Vui lòng nhập đủ tiêu đề và nội dung!");
+
+  let date = dateInput || new Date().toLocaleDateString("vi-VN");
+
+  let data = getData();
+  data.unshift({ title, text, date });
+  saveData(data);
+
+  document.getElementById("newTitle").value = "";
+  document.getElementById("newEntry").value = "";
+  document.getElementById("newDate").value = "";
+
+  renderEntries();
+}
+
+function deleteEntry(index) {
+  if (!confirm("Xoá mục này?")) return;
+  let data = getData();
+  data.splice(index, 1);
+  saveData(data);
+  renderEntries();
+}
+
+function editEntry(index) {
+  let data = getData();
+  let entry = data[index];
+
+  let newTitle = prompt("Sửa tiêu đề:", entry.title);
+  if (newTitle === null) return;
+
+  let newText = prompt("Sửa nội dung:", entry.text);
+  if (newText === null) return;
+
+  let newDate = prompt("Sửa ngày (dd/mm/yyyy):", entry.date);
+  if (newDate === null) return;
+
+  data[index] = { title: newTitle, text: newText, date: newDate };
+  saveData(data);
+  renderEntries();
+}
+
+window.onload = renderEntries;
