@@ -11,6 +11,31 @@ function renderEntries() {
   list.innerHTML = "";
   let data = getData();
 
+  // Lấy giá trị tìm kiếm
+  let keyword = document.getElementById("searchBox").value.toLowerCase();
+  // Lấy giá trị lọc tháng/năm
+  let monthFilter = document.getElementById("filterMonth").value; // dạng yyyy-mm
+
+  data = data.filter(entry => {
+    let matchKeyword =
+      entry.title.toLowerCase().includes(keyword) ||
+      entry.text.toLowerCase().includes(keyword);
+
+    let matchMonth = true;
+    if (monthFilter) {
+      let [year, month] = monthFilter.split("-");
+      let entryParts = entry.date.split("/"); // dd/mm/yyyy
+      if (entryParts.length === 3) {
+        let eDay = entryParts[0],
+            eMonth = entryParts[1],
+            eYear = entryParts[2];
+        matchMonth = (eYear === year && eMonth === month);
+      }
+    }
+
+    return matchKeyword && matchMonth;
+  });
+
   data.forEach((entry, index) => {
     let li = document.createElement("li");
     li.className = "entry";
@@ -33,7 +58,13 @@ function addEntry() {
 
   if (!title || !text) return alert("Vui lòng nhập đủ tiêu đề và nội dung!");
 
-  let date = dateInput || new Date().toLocaleDateString("vi-VN");
+  let date;
+  if (dateInput) {
+    let d = new Date(dateInput);
+    date = d.toLocaleDateString("vi-VN");
+  } else {
+    date = new Date().toLocaleDateString("vi-VN");
+  }
 
   let data = getData();
   data.unshift({ title, text, date });
